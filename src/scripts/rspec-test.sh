@@ -16,20 +16,9 @@ if ! mkdir -p "$PARAM_OUT_PATH"; then
   exit 1
 fi
 
-# Backup IFS
-readonly old_ifs="$IFS"
-
 # Split globs per comma and run the CLI split command
-IFS=","
 read -ra globs <<< "$PARAM_INCLUDE"
-split_files=$(circleci tests glob "${globs[@]}" | circleci tests split --split-by=timings)
-
-# Convert list of test files to array
-# This is necessary because the split command returns a list of files separated by newline
-while IFS= read -r line; do test_files+=("$line"); done <<< "$split_files"
-
-# Rollback IFS
-IFS="$old_ifs"
+test_files=($(circleci tests glob "${globs[@]}" | circleci tests run --command "xargs echo" --verbose --split-by=timings))
 
 args=()
 
